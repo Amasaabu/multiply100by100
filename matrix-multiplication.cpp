@@ -10,7 +10,7 @@ using namespace std;
 
 
 //define metrix here
-int size_v = 4;
+int size_v = 100;
 vector<vector<int>> matrix1(size_v, std::vector<int>(size_v));
 vector<vector<int>> matrix2(size_v, std::vector<int>(size_v));
 vector<vector<long long>> result_matrix_result(size_v, std::vector<long long>(size_v, 0));
