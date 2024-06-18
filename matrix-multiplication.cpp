@@ -4,8 +4,9 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <chrono>
 #include <mutex>
-#include "threadpool.h"
+#include "Thread_Pool.h"
 using namespace std;
 
 
@@ -39,10 +40,10 @@ void task() {
 
 
 void multiply_section(int start_row, int end_row) {
-    unique_lock<std::mutex> lg(lu);
+    /*unique_lock<std::mutex> lg(lu);
     cout << "Now starting multiplication" << endl;
     cout << "*****" << this_thread::get_id() << endl;
-    lg.unlock();
+    lg.unlock();*/
     for (int i = start_row; i < end_row; i++)
     {
         for (int j = 0; j < size_v; j++)
@@ -71,41 +72,45 @@ int main()
         for (int j = 0; j < size_v; ++j) {
             first = first + 1;
             matrix1[i][j] = first;
+            matrix2[i][j] = first;
         }
     }
-    //populate the first matrix2
-    int second = 0;
-    for (int i = 0; i < size_v; ++i) {
-        for (int j = 0; j < size_v; ++j) {
-            second = second + 1;
-            matrix2[i][j] = second;
-        }
-    }
-
+ 
+    auto start = std::chrono::steady_clock::now();
+    /*task();*/
+        //5033335000
     const unsigned thread_count = thread::hardware_concurrency();
-    vector<thread> threads;
+   vector<thread> threads;
     int rows_per_thread = size_v / thread_count;
 
-  //  task();
-    //5033335000
-
+    Thread_Pool thread_pool;
     for (int t = 0; t < thread_count; t++) {
         int start_row = t * rows_per_thread;
         int end_row = (t == thread_count - 1) ? size_v : start_row + rows_per_thread;
-        threads.push_back(thread(multiply_section, start_row, end_row));
+       //  threads.push_back(thread(multiply_section, start_row, end_row));
+        thread_pool.submit([start_row, end_row]() {multiply_section(start_row, end_row);});
     }
     for (auto& th : threads) {
         th.join();
     }
 
+    //auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+    //cout <<"Time in millsecods: "<< elapsed.count() << endl;
+
+
+
+
    
-    cout << "Now printing result" << endl;
-    for (int i = 0; i < size_v; i++)
-    {
-        for (int j = 0; j < size_v;j++) {
-            cout << result_matrix_result[i][j] << ' ';
-        }
-        cout << '\n';
-    }
+    //cout << "Now printing result" << endl;
+    //for (int i = 0; i < size_v; i++)
+    //{
+    //    for (int j = 0; j < size_v;j++) {
+    //        cout << result_matrix_result[i][j] << ' ';
+    //    }
+    //    cout << '\n';
+    //}
     //cout << "Number of threads that worked: " << thread_count<<endl;
 }
+
+
+

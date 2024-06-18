@@ -129,11 +129,13 @@
   <ItemGroup>
     <ClCompile Include="concurrent_queue_cv.cpp" />
     <ClCompile Include="matrix-multiplication.cpp" />
-    <ClCompile Include="threadpool.cpp" />
+    <ClCompile Include="Queue.cpp" />
+    <ClCompile Include="Thread_Pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="concurrent_queue_cv.h" />
-    <ClInclude Include="threadpool.h" />
+    <ClInclude Include="Queue.h" />
+    <ClInclude Include="Thread_Pool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
