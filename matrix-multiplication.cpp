@@ -19,24 +19,24 @@ vector<vector<long long>> result_matrix_result(size_v, std::vector<long long>(si
 //cout mutex lock
 mutex lu;
 
-void task() {
-    for (int i = 0; i < size_v; i++)
-    {
-        for (int j = 0; j < size_v; j++)
-        {
-            for (int k = 0; k < size_v; k++)
-            {
-                //matrix row value
-                int matrix_1_row_val = matrix1[i][k];
-                int matrix_2_col_val = matrix2[k][j];
-                long long r = matrix_1_row_val * matrix_2_col_val;
-                result_matrix_result[i][j] = result_matrix_result[i][j] + r;
-
-            }
-
-        }
-    }
-}
+//void task() {
+//    for (int i = 0; i < size_v; i++)
+//    {
+//        for (int j = 0; j < size_v; j++)
+//        {
+//            for (int k = 0; k < size_v; k++)
+//            {
+//                //matrix row value
+//                int matrix_1_row_val = matrix1[i][k];
+//                int matrix_2_col_val = matrix2[k][j];
+//                long long r = matrix_1_row_val * matrix_2_col_val;
+//                result_matrix_result[i][j] = result_matrix_result[i][j] + r;
+//
+//            }
+//
+//        }
+//    }
+//}
 
 
 void multiply_section(int start_row, int end_row) {
@@ -44,7 +44,6 @@ void multiply_section(int start_row, int end_row) {
     cout << "Now starting multiplication" << endl;
     cout << "*****" << this_thread::get_id() << endl;
     lg.unlock();*/
-    cout<<"Now processing rows from "<<start_row<<" to "<<end_row<<endl;
     for (int i = start_row; i < end_row; i++)
     {
         for (int j = 0; j < size_v; j++)
@@ -56,32 +55,7 @@ void multiply_section(int start_row, int end_row) {
                 int matrix_2_col_val = matrix2[k][j];
                 long long r = matrix_1_row_val * matrix_2_col_val;
                 result_matrix_result[i][j] = result_matrix_result[i][j] + r;
-
-            }
-
-        }
-    }
-}
-
-void custom_task() {
-    for (int i = 0; i < size_v; i++)
-    {
-        for (int j = 0; j < size_v; j++)
-        {
-            for (int k = 0; k < size_v; k++)
-            {
-                //matrix row value
-                int matrix_1_row_val = matrix1[i][k];
-                int matrix_2_col_val = matrix2[k][j];
-                long long r = matrix_1_row_val * matrix_2_col_val;
-                result_matrix_result[i][j] = result_matrix_result[i][j] + r;
-
-            }
-
-        }
-    }
-}
-
+            }}}}
 
 int main()
 {
@@ -99,39 +73,22 @@ int main()
     auto start = std::chrono::steady_clock::now();
     /*task();*/
         //5033335000
-   // const unsigned thread_count = thread::hardware_concurrency();
-   // int rows_per_thread = size_v / thread_count;
 
      Thread_Pool thread_pool(size_v);
-   // for (int t = 0; t < thread_count; t++) {
-      //  int start_row = t * rows_per_thread;
-      //  int end_row = (t == thread_count - 1) ? size_v : start_row + rows_per_thread;
-       //  threads.push_back(thread(multiply_section, start_row, end_row));
-       // thread_pool.submit([start_row, end_row]() {multiply_section(start_row, end_row);});
+     thread_pool.submit(multiply_section);
+     thread_pool.shutdown();
 
-        thread_pool.submit(multiply_section);
-        thread_pool.shutdown();
-       // thread_pool.shutdown();
-
-    //}
-
-    //auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-    //cout <<"Time in millsecods: "<< elapsed.count() << endl;
-
-        //sleep for 5 seconds
-      //  this_thread::sleep_for(chrono::seconds(1));
-
-
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+    cout <<"Time in millsecods: "<< elapsed.count() << endl;
    
-    cout << "Now printing result" << endl;
-    for (int i = 0; i < size_v; i++)
-    {
-        for (int j = 0; j < size_v;j++) {
-            cout << result_matrix_result[i][j] << ' ';
-        }
-        cout << '\n';
-    }
-//    cout << "Number of threads that worked: " << thread_count<<endl;
+    //cout << "Now printing result" << endl;
+    //for (int i = 0; i < size_v; i++)
+    //{
+    //    for (int j = 0; j < size_v;j++) {
+    //        cout << result_matrix_result[i][j] << ' ';
+    //    }
+    //    cout << '\n';
+    //}
 }
 
 
