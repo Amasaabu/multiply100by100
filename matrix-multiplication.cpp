@@ -12,15 +12,6 @@
 using namespace std;
 
 
-////define metrix here
-//int size_v = 100;
-//vector<vector<int>> matrix1(size_v, std::vector<int>(size_v));
-//vector<vector<int>> matrix2(size_v, std::vector<int>(size_v));
-//vector<vector<long long>> result_matrix_result(size_v, std::vector<long long>(size_v, 0));
-
-//cout mutex lock
-mutex lu;
-
 //void task() {
 //    for (int i = 0; i < size_v; i++)
 //    {
@@ -87,7 +78,7 @@ int main(int argc, char** argv)
 	}
     MPI_Bcast(&size_v, 1, MPI_INT, 0, MPI_COMM_WORLD);
  
-    auto start = std::chrono::steady_clock::now();
+
     /*task();*/
         //5033335000
         
@@ -111,18 +102,12 @@ int main(int argc, char** argv)
        if (i < extra_rows) sendcounts[i] += size_v; // Distribute extra rows
        displs[i] = (i > 0) ? (displs[i - 1] + sendcounts[i - 1]) : 0;
 
-       cout<< "Process " << i << " will get " << sendcounts[i] << " rows" << endl;
-       cout<< "Process " << i << " will start from col " << displs[i] << " rows" << endl;
     }
-    cout << "*********************************" << endl;
-     cout<<"Process "<<world_rank<<" has "<<sendcounts[world_rank]<<" rows"<<endl;
-     cout << "Process " << world_rank << " will start from col " << displs[world_rank] << " rows" << endl;
      vector<int> local_flat_data(sendcounts[world_rank]);
     
 
      //scatter row vectors of matrix1 to all processors by scattering pointers of each row in the matrix hence matrix1.data()->data()
      MPI_Scatterv(flattened_matrix1.data(), sendcounts.data(), displs.data(), MPI_INT, local_flat_data.data(), sendcounts[world_rank] , MPI_INT, 0, MPI_COMM_WORLD);
-    // cout<< "Process " << world_rank << " has received the data "<<local_flat_data[0] << endl;
      
     //brodcast matrix2 to all processors
      for (int i = 0; i < size_v; ++i) {
@@ -138,10 +123,12 @@ int main(int argc, char** argv)
              local_matrix1[i][j] = local_flat_data[i * size_v + j];
          }
      }
-     cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
+   //  cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
   //   multiply the matrices
      vector<vector<long long>> local_result(sendcounts[world_rank] / size_v, vector<long long>(size_v, 0));
  //    Launch threads based on local assembled matrix 1 size
+
+     auto start = std::chrono::steady_clock::now();
      Thread_Pool thread_pool(sendcounts[world_rank] / size_v);
      thread_pool.submit([local_matrix1, &local_result, world_rank](int start, int end) {
          for (int i = start; i < end; i++)
@@ -153,7 +140,6 @@ int main(int argc, char** argv)
                      //matrix row value
                      local_result[i][j] += local_matrix1[i][k] * matrix2[k][j];
                  }
-                 cout<<"From "<<world_rank<<" Sums are: " << local_result[0][0] << endl;
                 // cout << "Sums are: " << local_result[0][0] << endl;
              }
          }
@@ -209,7 +195,12 @@ int main(int argc, char** argv)
 			 }
 		 }
 	 }
+     // Mark the end time after gathering the results
+     auto end = std::chrono::steady_clock::now();
 
+     // Calculate the duration in milliseconds
+     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+     cout << "Duration is " << duration<<endl;
   //   //process 0 prints the result
      if (world_rank == 0) {
          cout << "Now printing result" << endl;
