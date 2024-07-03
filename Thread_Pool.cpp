@@ -85,3 +85,18 @@ void Thread_Pool::shutdown() {
 		if (t.joinable()) t.join();
 	}
 }
+
+
+//for (int i = 0; i < world_size; ++i) {
+//	// Calculate the number of rows for this process
+//	int rows_for_this_process = rows_per_proc + (i < extra_rows ? 1 : 0);
+//
+//	// Calculate the number of elements (rows * columns) for this process
+//	sendcounts[i] = rows_for_this_process * size_v;
+//
+//	// Set the displacement for this process
+//	displs[i] = current_displ;
+//
+//	// Update the displacement for the next process
+//	current_displ += sendcounts[i];
+//}

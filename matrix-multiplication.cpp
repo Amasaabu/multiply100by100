@@ -50,10 +50,12 @@ using namespace std;
 //                result_matrix_result[i][j] = result_matrix_result[i][j] + r;
 //            }}}}
         //define metrix here
+//mutex 
+
 int size_v = 100;
-vector<vector<int>> matrix1(size_v, std::vector<int>(size_v));
-vector<vector<int>> matrix2(size_v, std::vector<int>(size_v));
-vector<vector<long long>> result_matrix_result(size_v, std::vector<long long>(size_v, 0));
+int* mat1 = new int[size_v * size_v];
+int * mat2 = new int[size_v * size_v];
+long long* result = new long long[size_v * size_v];
 int main(int argc, char** argv)
 {
     // Initialize the MPI environment
@@ -66,14 +68,12 @@ int main(int argc, char** argv)
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     //Populating the matrixes
     if (world_rank == 0) {
-
         int first = 0;
-        for (int i = 0; i < size_v; ++i) {
-            for (int j = 0; j < size_v; ++j) {
-                first = first + 1;
-                matrix1[i][j] = first;
-                matrix2[i][j] = first;
-            }
+        for (int i = 0; i < size_v*size_v; ++i) {
+            first = first + 1;
+                mat1[i] = first;
+                mat2[i] = first;
+            
         }
 	}
     MPI_Bcast(&size_v, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -83,13 +83,6 @@ int main(int argc, char** argv)
         //5033335000
         
        
-    //flatten matrix1
-    vector<int> flattened_matrix1;
-    for (int i = 0; i < size_v; i++) {
-        for (int j = 0; j < size_v; j++) {
-            flattened_matrix1.push_back(matrix1[i][j]);
-        }
-    }
      //each processor will get a row of matrix1
      vector<int> sendcounts(world_size);
      vector<int> displs(world_size);
@@ -97,40 +90,41 @@ int main(int argc, char** argv)
 
     int rows_per_proc = size_v / world_size;
     int extra_rows = size_v % world_size;
-    for (int i = 0; i < world_size; i++) {
-       sendcounts[i] = rows_per_proc * size_v; // Each processor's share of rows, times columns
-       if (i < extra_rows) sendcounts[i] += size_v; // Distribute extra rows
-       displs[i] = (i > 0) ? (displs[i - 1] + sendcounts[i - 1]) : 0;
-
-    }
-     vector<int> local_flat_data(sendcounts[world_rank]);
+    int current_displ = 0;
+    for (int i = 0; i < world_size; ++i) {
+    	// Calculate the number of rows for this process
+    	int rows_for_this_process = rows_per_proc + (i < extra_rows ? 1 : 0);
     
-
+    	// Calculate the number of elements (rows * columns) for this process
+    	sendcounts[i] = rows_for_this_process * size_v;
+    
+    	// Set the displacement for this process
+    	displs[i] = current_displ;
+    
+    	// Update the displacement for the next process
+    	current_displ += sendcounts[i];
+    }
+    int * local_data = new int[sendcounts[world_rank]];
      //scatter row vectors of matrix1 to all processors by scattering pointers of each row in the matrix hence matrix1.data()->data()
-     MPI_Scatterv(flattened_matrix1.data(), sendcounts.data(), displs.data(), MPI_INT, local_flat_data.data(), sendcounts[world_rank] , MPI_INT, 0, MPI_COMM_WORLD);
-     
+     MPI_Scatterv(mat1, sendcounts.data(), displs.data(), MPI_INT, local_data, sendcounts[world_rank] , MPI_INT, 0, MPI_COMM_WORLD);
+ 
+     //cout << "Process " << world_rank << " has received the matrix1bbb data: " << *local_data+5 << endl;
+    
     //brodcast matrix2 to all processors
-     for (int i = 0; i < size_v; ++i) {
-         MPI_Bcast(matrix2[i].data(), size_v, MPI_INT, 0, MPI_COMM_WORLD);
-     }
+     MPI_Bcast(mat2, size_v * size_v, MPI_INT, 0, MPI_COMM_WORLD);
 
-     //assemble the local-matrix for easy calculation....Local matrix would hold vectors of what each processor got..And each of those vectors would hold 100(size_v)
-     vector<vector<int>> local_matrix1(sendcounts[world_rank]/size_v, vector<int>(size_v));
-    // i is the row
-     for (int i = 0; i < sendcounts[world_rank]/size_v; ++i) {
-         for (int j = 0; j < size_v; ++j) {
-             //i*size_v is the row since we know that i*size_v would give us the row
-             local_matrix1[i][j] = local_flat_data[i * size_v + j];
-         }
-     }
-   //  cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
+
+    //cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
   //   multiply the matrices
-     vector<vector<long long>> local_result(sendcounts[world_rank] / size_v, vector<long long>(size_v, 0));
+
+      long long* local_result = new long long[sendcounts[world_rank]];
+      fill_n(local_result, sendcounts[world_rank], 0LL); // Initialize
+      cout << "Process has received: " << sendcounts[world_rank] << endl;
  //    Launch threads based on local assembled matrix 1 size
 
      auto start = std::chrono::steady_clock::now();
-     Thread_Pool thread_pool(sendcounts[world_rank] / size_v);
-     thread_pool.submit([local_matrix1, &local_result, world_rank](int start, int end) {
+     Thread_Pool thread_pool(sendcounts[world_rank]/size_v);
+     thread_pool.submit([local_data, &local_result, world_rank](int start, int end) {
          for (int i = start; i < end; i++)
          {
              for (int j = 0; j < size_v; j++)
@@ -138,7 +132,7 @@ int main(int argc, char** argv)
                  for (int k = 0; k < size_v; k++)
                  {
                      //matrix row value
-                     local_result[i][j] += local_matrix1[i][k] * matrix2[k][j];
+                     local_result[i * size_v + j] += local_data[i * size_v + k] * mat2[k * size_v + j];
                  }
                 // cout << "Sums are: " << local_result[0][0] << endl;
              }
@@ -147,25 +141,12 @@ int main(int argc, char** argv)
      thread_pool.shutdown();
 
 
-  //   flatten local_result on each process and thereby preoare for assembling by gatherv
-     vector<long long> flattened_local_result;
-     for (int i = 0; i < local_result.size(); i++) {
-         for (int j = 0; j < size_v; j++) {
-             flattened_local_result.push_back(local_result[i][j]);
-         }
-     }
 
-
-
-     // Prepare a vector to receive the gathered results on the root process
-     vector<long long> gathered_results;
-     if (world_rank == 0) {
-         gathered_results.resize(size_v * size_v); // Adjust size accordingly
-     }
+   
      vector<int> sendcounts_gather(world_size, 0);
      vector<int> displs_gather(world_size, 0);
 
-     int current_displ = 0;
+     int curr_displ = 0;
      for (int i = 0; i < world_size; ++i) {
          // Calculate the number of rows this process is responsible for
          int rows_for_this_proc = rows_per_proc + (i < extra_rows ? 1 : 0);
@@ -174,47 +155,33 @@ int main(int argc, char** argv)
          sendcounts_gather[i] = rows_for_this_proc * size_v;
 
          // Displacement for this process's data in the gathered array
-         displs_gather[i] = current_displ;
+         displs_gather[i] = curr_displ;
 
          // Update displacement for the next process
-         current_displ += sendcounts_gather[i];
+         curr_displ += sendcounts_gather[i];
      }
 
      //now gather results from flattened_local_result to gathered_results
      //Note that we are gathering the flattened_local_result so we need not re-calculat the displacements and sendcounts
-     MPI_Gatherv(flattened_local_result.data(), flattened_local_result.size(), MPI_LONG_LONG, gathered_results.data(), sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+     MPI_Gatherv(local_result,sendcounts[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
 
-     //because we scattered the local result we need to assemble it back to the original result  matrix 
-     //overall reuslt
-     vector<vector<long long>> overall_result(size_v, vector<long long>(size_v, 0));
-     if (world_rank==0) {
-         //i is the row
-		 for (int i = 0; i < size_v; i++) {
-			 for (int j = 0; j < size_v; j++) {
-				 overall_result[i][j] = gathered_results[i * size_v + j];
-			 }
-		 }
-	 }
+     if (world_rank == 0) {
+         for (int i = 0; i < size_v; i++) {
+             for (int j = 0; j < size_v; j++) {
+                 cout << result[i * size_v + j] << ' ';
+             }
+             cout << '\n';
+         }
+     }
+
      // Mark the end time after gathering the results
      auto end = std::chrono::steady_clock::now();
 
      // Calculate the duration in milliseconds
      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
      cout << "Duration is " << duration<<endl;
-  //   //process 0 prints the result
-     if (world_rank == 0) {
-         cout << "Now printing result" << endl;
-         for (int i = 0; i < size_v; i++)
-         {
-             for (int j = 0; j < size_v; j++) {
-                 cout << overall_result[i][j] << ' ';
-             }
-             cout << '\n';
-         }
-     }
- 
 	 // Finalize the MPI environment.
-    MPI_Finalize();
+     MPI_Finalize();
     return 0;
 }
 
