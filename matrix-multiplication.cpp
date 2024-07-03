@@ -113,13 +113,21 @@ int main(int argc, char** argv)
     //brodcast matrix2 to all processors
      MPI_Bcast(mat2, size_v * size_v, MPI_INT, 0, MPI_COMM_WORLD);
 
+     //ensure every processor has some work to do
+     if (sendcounts[world_rank] == 0) {
+         cout<<"Processor "<<world_rank<<" has no work to do"<<endl;
+		 MPI_Finalize();
+		 return 0;
+	 }
 
     //cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
   //   multiply the matrices
 
       long long* local_result = new long long[sendcounts[world_rank]];
       fill_n(local_result, sendcounts[world_rank], 0LL); // Initialize
-      cout << "Process has received: " << sendcounts[world_rank] << endl;
+
+
+    //  cout << "Process "<<world_rank << " has received : " << sendcounts[world_rank] << endl;
  //    Launch threads based on local assembled matrix 1 size
 
      auto start = std::chrono::steady_clock::now();
@@ -127,6 +135,7 @@ int main(int argc, char** argv)
      thread_pool.submit([local_data, &local_result, world_rank](int start, int end) {
          for (int i = start; i < end; i++)
          {
+            // std::cout << "work_load_per_thread: " <<end-start << std::endl;
              for (int j = 0; j < size_v; j++)
              {
                  for (int k = 0; k < size_v; k++)
@@ -134,7 +143,6 @@ int main(int argc, char** argv)
                      //matrix row value
                      local_result[i * size_v + j] += local_data[i * size_v + k] * mat2[k * size_v + j];
                  }
-                // cout << "Sums are: " << local_result[0][0] << endl;
              }
          }
 	 });
@@ -161,8 +169,6 @@ int main(int argc, char** argv)
          curr_displ += sendcounts_gather[i];
      }
 
-     //now gather results from flattened_local_result to gathered_results
-     //Note that we are gathering the flattened_local_result so we need not re-calculat the displacements and sendcounts
      MPI_Gatherv(local_result,sendcounts[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
 
      if (world_rank == 0) {
@@ -181,6 +187,12 @@ int main(int argc, char** argv)
      auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
      cout << "Duration is " << duration<<endl;
 	 // Finalize the MPI environment.
+     delete [] local_data;
+     delete [] local_result;
+     delete [] mat1;
+     delete [] mat2;
+     delete [] result;
+
      MPI_Finalize();
     return 0;
 }

@@ -46,6 +46,8 @@ void Thread_Pool::submit(Func2 F) {
 	// Calculate workload per thread to ensure even distribution
 	int work_load_per_thread = num_of_itmes / num_of_threads;
 	int remaining_work = num_of_itmes % num_of_threads;
+	std::cout << "num_of_rows: " << num_of_itmes << std::endl;
+	std::cout<<"num_of_threads: "<<num_of_threads<<std::endl;
 
 	int start_row = 0;
 	for (int i = 0; i < num_of_threads; i++) {
