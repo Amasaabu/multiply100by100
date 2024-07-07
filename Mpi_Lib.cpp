@@ -60,7 +60,10 @@ void Mpi_Lib::scatterV(int* data, int size_v, int* local_data, Funca f) {
 
 
 	MPI_Scatterv(data, this->sendcounts.data(), displs.data(), MPI_INT, local_data, sendcounts[world_rank], MPI_INT, 0, MPI_COMM_WORLD);
-
+	if (sendcounts[world_rank] == 0) {
+		cout << "-------------Process " << world_rank << " received zero data." << endl;
+		return;
+	}
 
 	//now split accross threads
 	int threadPoolSize = sendcounts[world_rank] / size_v;
@@ -92,7 +95,7 @@ void Mpi_Lib::gather_v(long long * local_result, int count_of_workload_to_be_dis
 		curr_displ += sendcounts_gather[i];
 	}
 
-	MPI_Gatherv(local_result, this->sendcounts[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+	MPI_Gatherv(local_result, sendcounts[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
 }
 
 //return pointer to displa

@@ -53,7 +53,7 @@ using namespace std;
         //define metrix here
 //mutex 
 
-int size_v = 100;
+int size_v = 5;
 int* mat1 = new int[size_v * size_v];
 int * mat2 = new int[size_v * size_v];
 long long* result = new long long[size_v * size_v];
