@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     long long* local_result = new long long[sendcounts[world_rank]];
     fill_n(local_result, sendcounts[world_rank], 0LL); // Initialize
     //scatter matrix1 to all processors
-    mpi.scatterV(mat1, size_v, local_data, [local_data, &local_result, world_rank](int start, int end) {
+    mpi.scatterV(mat1, local_data, [local_data, &local_result, world_rank](int start, int end) {
         for (int i = start; i < end; i++)
         {
             // std::cout << "work_load_per_thread: " <<end-start << std::endl;

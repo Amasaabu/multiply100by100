@@ -59,7 +59,7 @@ vector<int> Mpi_Lib::get_sendcounts() {
 
 //custom Scatterv
 //this would distribute the workload to all processors and accross threads with custom Thread_Pool
-void Mpi_Lib::scatterV(int* data, int size_v, int* local_data, Funca f) {
+void Mpi_Lib::scatterV(int* data, int* local_data, Funca f) {
 
 
 	MPI_Scatterv(data, this->sendcounts.data(), displs.data(), MPI_INT, local_data, sendcounts[world_rank], MPI_INT, 0, MPI_COMM_WORLD);
@@ -69,7 +69,7 @@ void Mpi_Lib::scatterV(int* data, int size_v, int* local_data, Funca f) {
 	}
 
 	//now split accross threads
-	int threadPoolSize = sendcounts[world_rank] / size_v;
+	int threadPoolSize = sendcounts[world_rank] / this->size_of_data;
 	Thread_Pool thread_pool(threadPoolSize); //potentially divide by size_v, i could create an overload
 	thread_pool.submit(f);
 	//ensure all threads are joined

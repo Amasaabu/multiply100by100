@@ -12,7 +12,7 @@ public:
 	void broadcast(int* data, int count, int root);
 	int get_world_rank();
 	vector<int> get_sendcounts();
-	void scatterV(int* data, int size_v, int*, Funca f);
+	void scatterV(int* data,  int*, Funca f);
 	void gather_v(long long* local_result, long long* result);
 	//void scatterV(int* data, int count_of_workload_to_be_distrtibuted, int* local_data, Func f);
 	int* get_displs();
