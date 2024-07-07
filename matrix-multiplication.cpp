@@ -59,7 +59,8 @@ int* mat2 = new int[size_v * size_v];
 long long* result = new long long[size_v * size_v];
 int main(int argc, char** argv)
 {
-    Mpi_Lib mpi(argc, argv, size_v, size_v);
+    Mpi_Lib<int, int, long long> mpi(argc, argv);
+    mpi.init(size_v, size_v);
     int world_rank = mpi.get_world_rank();
     auto sendcounts = mpi.get_sendcounts();
     //Populating the matrixes
