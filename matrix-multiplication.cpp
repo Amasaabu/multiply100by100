@@ -53,30 +53,30 @@ using namespace std;
         //define metrix here
 //mutex 
 
-int size_v = 5;
+int size_v = 100;
 int* mat1 = new int[size_v * size_v];
-int * mat2 = new int[size_v * size_v];
+int* mat2 = new int[size_v * size_v];
 long long* result = new long long[size_v * size_v];
 int main(int argc, char** argv)
 {
-   Mpi_Lib mpi(argc, argv, size_v);
-   int world_rank = mpi.get_world_rank();
-   auto sendcounts = mpi.get_sendcounts();
+    Mpi_Lib mpi(argc, argv, size_v, size_v);
+    int world_rank = mpi.get_world_rank();
+    auto sendcounts = mpi.get_sendcounts();
     //Populating the matrixes
     if (world_rank == 0) {
         int first = 0;
-        for (int i = 0; i < size_v*size_v; ++i) {
+        for (int i = 0; i < size_v * size_v; ++i) {
             first = first + 1;
-                mat1[i] = first;
-                mat2[i] = first;
-            
+            mat1[i] = first;
+            mat2[i] = first;
+
         }
-	}
+    }
     //mpi.barrier();
 
     /*task();*/
         //5033335000
-        
+
     // Mark the start time
     auto start = std::chrono::steady_clock::now();
 
@@ -103,45 +103,44 @@ int main(int argc, char** argv)
             }
         }
         });
- 
-     //cout << "Process " << world_rank << " has received the matrix1bbb data: " << *local_data+5 << endl;
-    
 
-  //   //ensure every processor has some work to do
-  //   if (sendcounts[world_rank] == 0) {
-  //       cout<<"Processor "<<world_rank<<" has no work to do"<<endl;
-		// MPI_Finalize();
-		// return 0;
-	 //}
+    //cout << "Process " << world_rank << " has received the matrix1bbb data: " << *local_data+5 << endl;
 
-    //cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
-  //   multiply the matrices
 
-   
-     mpi.gather_v(local_result, sendcounts[world_rank], result, size_v);
-     if (world_rank == 0) {
-         for (int i = 0; i < size_v; i++) {
-             for (int j = 0; j < size_v; j++) {
-                 cout << result[i * size_v + j] << ' ';
-             }
-             cout << '\n';
-         }
-     }
+ //   //ensure every processor has some work to do
+ //   if (sendcounts[world_rank] == 0) {
+ //       cout<<"Processor "<<world_rank<<" has no work to do"<<endl;
+       // MPI_Finalize();
+       // return 0;
+    //}
 
-     // Mark the end time after gathering the results
-     auto end = std::chrono::steady_clock::now();
+   //cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
+ //   multiply the matrices
 
-     // Calculate the duration in milliseconds
-     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-     cout << "Duration is " << duration<<endl;
-	 // Finalize the MPI environment.
-     delete [] local_result;
-     delete [] mat1;
-     delete [] mat2;
-     delete [] result;
-     delete[] local_data;
+
+    mpi.gather_v(local_result, result);
+    if (world_rank == 0) {
+        for (int i = 0; i < size_v; i++) {
+            for (int j = 0; j < size_v; j++) {
+                cout << result[i * size_v + j] << ' ';
+            }
+            cout << '\n';
+        }
+    }
+
+    // Mark the end time after gathering the results
+    auto end = std::chrono::steady_clock::now();
+
+    // Calculate the duration in milliseconds
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    cout << "Duration is " << duration << endl;
+    // Finalize the MPI environment.
+    delete[] local_result;
+    delete[] mat1;
+    delete[] mat2;
+    delete[] result;
+    delete[] local_data;
     return 0;
 }
-
 
 

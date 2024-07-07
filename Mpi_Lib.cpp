@@ -4,15 +4,15 @@
 #include "Thread_Pool.h"
 
 // Constructor
-Mpi_Lib::Mpi_Lib(int& argc, char** argv, int size_v)
+Mpi_Lib::Mpi_Lib(int& argc, char** argv, int size_v, int elem_per_unit)
 {
-    // Initialize the MPI environment
-    MPI_Init(&argc, &argv);
-    // Get the rank of the process
-    MPI_Comm_rank(MPI_COMM_WORLD, &this->world_rank);
-    //number of processors
+	// Initialize the MPI environment
+	MPI_Init(&argc, &argv);
+	// Get the rank of the process
+	MPI_Comm_rank(MPI_COMM_WORLD, &this->world_rank);
+	//number of processors
 
-    MPI_Comm_size(MPI_COMM_WORLD, &this->world_size);
+	MPI_Comm_size(MPI_COMM_WORLD, &this->world_size);
 
 	//initialize the sendcounts and displs
 	this->sendcounts.resize(this->world_size);
@@ -23,13 +23,16 @@ Mpi_Lib::Mpi_Lib(int& argc, char** argv, int size_v)
 
 	this->rows_per_proc = size_v / world_size;
 	this->extra_rows = size_v % world_size;
+
+	this->size_of_data = size_v;
+	this->elements_per_unit = elem_per_unit;
 	int current_displ = 0;
 	for (int i = 0; i < world_size; ++i) {
 		// Calculate the number of rows for this process
 		int rows_for_this_process = rows_per_proc + (i < extra_rows ? 1 : 0);
 
 		// Calculate the number of elements (rows * columns) for this process
-		this->sendcounts[i] = rows_for_this_process * size_v;
+		this->sendcounts[i] = rows_for_this_process * elements_per_unit;
 
 		// Set the displacement for this process
 		displs[i] = current_displ;
@@ -75,7 +78,7 @@ void Mpi_Lib::scatterV(int* data, int size_v, int* local_data, Funca f) {
 }
 
 //Custom Gathrev
-void Mpi_Lib::gather_v(long long * local_result, int count_of_workload_to_be_distrtibuted,long long *result, int size_v) {
+void Mpi_Lib::gather_v(long long* local_result, long long* result) {
 	//gather the results from all processors
 	vector<int> sendcounts_gather(this->world_size, 0);
 	vector<int> displs_gather(this->world_size, 0);
@@ -86,7 +89,7 @@ void Mpi_Lib::gather_v(long long * local_result, int count_of_workload_to_be_dis
 		int rows_for_this_proc = rows_per_proc + (i < extra_rows ? 1 : 0);
 
 		// Each process sends back rows_for_this_proc * size_v elements
-		sendcounts_gather[i] = rows_for_this_proc * size_v;
+		sendcounts_gather[i] = rows_for_this_proc * this->elements_per_unit;
 
 		// Displacement for this process's data in the gathered array
 		displs_gather[i] = curr_displ;
@@ -95,7 +98,7 @@ void Mpi_Lib::gather_v(long long * local_result, int count_of_workload_to_be_dis
 		curr_displ += sendcounts_gather[i];
 	}
 
-	MPI_Gatherv(local_result, sendcounts[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+	MPI_Gatherv(local_result, sendcounts_gather[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
 }
 
 //return pointer to displa
