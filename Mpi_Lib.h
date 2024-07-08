@@ -16,7 +16,7 @@ public:
 	int get_world_rank();
 	vector<int> get_sendcounts();
 	void scatterV(T*, T*, Funca f);
-	void gather_v(R* local_result, R* result);
+	void gather_v(R* local_result, R* result,bool use_element_per_unit_scaling=false);
 	//void scatterV(int* data, int count_of_workload_to_be_distrtibuted, int* local_data, Func f);
 	int* get_displs();
 	void barrier();
@@ -130,7 +130,7 @@ void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, Funca f) {
 
 //Custom Gathrev
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result) {
+void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, bool use_element_per_unit_scaling) {
 
 	//std::vector<int> recvcounts;
 	//std::vector<int> rdispls;
@@ -164,8 +164,14 @@ void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result) {
 	for (int i = 0; i < this->world_size; ++i) {
 		// Calculate the number of rows this process is responsible for
 		int rows_for_this_proc = rows_per_proc + (i < extra_rows ? 1 : 0);
-		// Each process sends back rows_for_this_proc * size_v elements
-		sendcounts_gather[i] = rows_for_this_proc * this->elements_per_unit;
+		if (use_element_per_unit_scaling) {
+			// Each process sends back rows_for_this_proc * size_v elements
+			sendcounts_gather[i] = rows_for_this_proc * this->elements_per_unit;
+		}
+		else {
+			sendcounts_gather[i] = rows_for_this_proc;
+		}
+
 
 		// Displacement for this process's data in the gathered array
 		displs_gather[i] = curr_displ;
