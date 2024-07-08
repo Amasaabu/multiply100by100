@@ -83,14 +83,14 @@ int main(int argc, char** argv)
 
 
     //brodcast matrix2 to all processors
-    mpi.broadcast(mat2, size_v * size_v, 0);
+    mpi.broadcast(mat2, size_v * size_v, 0, MPI_INT);
 
     int* local_data = new int[sendcounts[world_rank]];
     fill_n(local_data, sendcounts[world_rank], 0); // Initialize
     long long* local_result = new long long[sendcounts[world_rank]];
     fill_n(local_result, sendcounts[world_rank], 0LL); // Initialize
     //scatter matrix1 to all processors
-    mpi.scatterV(mat1, local_data, [local_data, &local_result, world_rank](int start, int end) {
+    mpi.scatterV(mat1, local_data, MPI_INT, [local_data, &local_result, world_rank](int start, int end) {
         for (int i = start; i < end; i++)
         {
             // std::cout << "work_load_per_thread: " <<end-start << std::endl;
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
  //   multiply the matrices
 
 
-    mpi.gather_v(local_result, result, true);
+    mpi.gather_v(local_result, result,MPI_LONG_LONG,  true);
     if (world_rank == 0) {
         for (int i = 0; i < size_v; i++) {
             for (int j = 0; j < size_v; j++) {

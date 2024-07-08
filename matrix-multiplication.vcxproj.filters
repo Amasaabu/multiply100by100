@@ -30,6 +30,9 @@
     <ClCompile Include="Mpi_Lib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Mpi_Type_Mapping.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Thread_Pool.h">
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Mpi_Lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mpi_Type_Mapping.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

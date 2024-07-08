@@ -133,12 +133,14 @@
     <ClCompile Include="concurrent_queue_cv.cpp" />
     <ClCompile Include="matrix-multiplication.cpp" />
     <ClCompile Include="Mpi_Lib.cpp" />
+    <ClCompile Include="Mpi_Type_Mapping.cpp" />
     <ClCompile Include="Queue.cpp" />
     <ClCompile Include="Thread_Pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="concurrent_queue_cv.h" />
     <ClInclude Include="Mpi_Lib.h" />
+    <ClInclude Include="Mpi_Type_Mapping.h" />
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Thread_Pool.h" />
   </ItemGroup>

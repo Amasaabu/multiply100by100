@@ -12,11 +12,11 @@ class Mpi_Lib
 public:
 	Mpi_Lib(int&, char**);
 	void init(int&, int elements_per_unit = 1);
-	void broadcast(U*, int count, int root);
+	void broadcast(U*, int, int, MPI_Datatype);
 	int get_world_rank();
 	vector<int> get_sendcounts();
-	void scatterV(T*, T*, Funca f);
-	void gather_v(R* local_result, R* result,bool use_element_per_unit_scaling=false);
+	void scatterV(T*, T*, MPI_Datatype, Funca f);
+	void gather_v(R* local_result, R* result, MPI_Datatype, bool use_element_per_unit_scaling = false);
 	//void scatterV(int* data, int count_of_workload_to_be_distrtibuted, int* local_data, Func f);
 	int* get_displs();
 	void barrier();
@@ -87,9 +87,9 @@ void Mpi_Lib<T, U, R>::init(int& size_v, int elements_per_unit) {
 
 //implement brodcast
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::broadcast(U* data_to_brodcast, int count, int root)
+void Mpi_Lib<T, U, R>::broadcast(U* data_to_brodcast, int count, int root, MPI_Datatype type_of_data_to_brodcast)
 {
-	MPI_Bcast(data_to_brodcast, count, MPI_INT, root, MPI_COMM_WORLD);
+	MPI_Bcast(data_to_brodcast, count, type_of_data_to_brodcast, root, MPI_COMM_WORLD);
 }
 //return world_rank
 template <class T, class U, class R>
@@ -105,10 +105,10 @@ vector<int> Mpi_Lib<T, U, R>::get_sendcounts() {
 //custom Scatterv
 //this would distribute the workload to all processors and accross threads with custom Thread_Pool
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, Funca f) {
+void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, MPI_Datatype type_to_scatter, Funca f) {
 
 
-	MPI_Scatterv(data_to_scatter, this->sendcounts.data(), displs.data(), MPI_INT, local_data, sendcounts[world_rank], MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Scatterv(data_to_scatter, this->sendcounts.data(), displs.data(), type_to_scatter, local_data, sendcounts[world_rank], type_to_scatter, 0, MPI_COMM_WORLD);
 
 
 	//now split accross threads
@@ -130,7 +130,7 @@ void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, Funca f) {
 
 //Custom Gathrev
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, bool use_element_per_unit_scaling) {
+void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, MPI_Datatype type_of_result, bool use_element_per_unit_scaling) {
 
 	//std::vector<int> recvcounts;
 	//std::vector<int> rdispls;
@@ -182,7 +182,7 @@ void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, bool use_element_per
 	cout << "********************" << endl;
 	cout << "Processor " << world_rank << " is gathering results" << endl;
 	cout << "Processor " << world_rank << "has " << this->sendcounts[world_rank] << " elements" << endl;
-	MPI_Gatherv(local_result, sendcounts_gather[world_rank], MPI_LONG_LONG, result, sendcounts_gather.data(), displs_gather.data(), MPI_LONG_LONG, 0, MPI_COMM_WORLD);
+	MPI_Gatherv(local_result, sendcounts_gather[world_rank], type_of_result, result, sendcounts_gather.data(), displs_gather.data(), type_of_result, 0, MPI_COMM_WORLD);
 	cout << "Processor " << world_rank << " has finished work" << endl;
 }
 
