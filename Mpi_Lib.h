@@ -17,12 +17,11 @@ public:
 	vector<int> get_sendcounts();
 	void scatterV(T*, T*, MPI_Datatype, Funca f);
 	void gather_v(R* local_result, R* result, MPI_Datatype, bool use_element_per_unit_scaling = false);
-	//void scatterV(int* data, int count_of_workload_to_be_distrtibuted, int* local_data, Func f);
-	int* get_displs();
 	void barrier();
 	~Mpi_Lib();
 
 private:
+	int* get_displs();
 	int world_rank;
 	int world_size;
 	int remainder;
@@ -47,6 +46,7 @@ Mpi_Lib<T, U, R>::Mpi_Lib(int& argc, char** argv)
 	//number of processors
 
 	MPI_Comm_size(MPI_COMM_WORLD, &this->world_size);
+	cout<< "World size is: " << this->world_size << endl;
 }
 
 //initialize MPI
@@ -64,13 +64,6 @@ void Mpi_Lib<T, U, R>::init(int& size_v, int elements_per_unit) {
 	int current_displ = 0;
 	int sum = 0;
 	for (int i = 0; i < world_size; ++i) {
-		//sendcounts[i] = (numOptions / world_size) * elements_per_unit;
-		//if (remainder > 0) {
-		//	sendcounts[i] += elements_per_unit;
-		//	remainder--;
-		//}
-		//displs[i] = sum;
-		//sum = sum + sendcounts[i];
 
 		// Calculate the number of rows for this process
 		int rows_for_this_process = rows_per_proc + (i < extra_rows ? 1 : 0);
@@ -132,28 +125,7 @@ void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, MPI_Datatype 
 template <class T, class U, class R>
 void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, MPI_Datatype type_of_result, bool use_element_per_unit_scaling) {
 
-	//std::vector<int> recvcounts;
-	//std::vector<int> rdispls;
-	//	recvcounts.resize(world_size);
-	//	rdispls.resize(world_size);
-	//	int total_results = this->size_of_data;
-	//	int remainder = total_results % world_size;
-	//	int sum = 0;
-	//	for (int i = 0; i < world_size; i++) {
-	//		recvcounts[i] = (total_results / world_size);
-	//		if (remainder > 0) {
-	//			recvcounts[i]++;
-	//			remainder--;
-	//		}
-	//		rdispls[i] = sum;
-	//		sum += recvcounts[i];
-	//	}
-	//
 
-
-	//MPI_Gatherv(local_result, this->sendcounts[world_rank] / this->elements_per_unit, MPI_FLOAT,
-	//	result, recvcounts.data(), rdispls.data(), MPI_FLOAT,
-	//	0, MPI_COMM_WORLD);
 
 
 	//gather the results from all processors

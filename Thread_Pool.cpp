@@ -21,12 +21,7 @@ void Thread_Pool::worker() {
 
 Thread_Pool::Thread_Pool(int number_of_items) {
 	done.store(false);
-	//this->start_point = start_point;
-	//this->end_point = end_point;
 	this->num_of_threads = std::thread::hardware_concurrency();
-	//this->work_load_per_thread = (end_point-start_point) / this->num_of_threads;
-	//this->total_zize_of_data = end_point - start_point;
-	//dont use more threads than data#
 	this->num_of_itmes = number_of_items;
 	num_of_threads = std::min(this->num_of_threads, number_of_items);
 	//spin up workers
@@ -35,13 +30,6 @@ Thread_Pool::Thread_Pool(int number_of_items) {
 	}
 }
 
-//void Thread_Pool::submit(Func2 F) {
-//	for (int i = 0; i < this->num_of_threads; i++) {
-//		int start_row = start_point + i * this->work_load_per_thread;
-//		int end_row = (i == this->num_of_threads - 1) ? end_point : start_row + this->work_load_per_thread;
-//		wrk_queue.push([this, F]() {F(0, this->num_of_itmes); });
-//	}
-//}
 void Thread_Pool::submit(Func2 F) {
 	// Calculate workload per thread to ensure even distribution
 	int work_load_per_thread = num_of_itmes / num_of_threads;
@@ -87,18 +75,3 @@ void Thread_Pool::shutdown() {
 		if (t.joinable()) t.join();
 	}
 }
-
-
-//for (int i = 0; i < world_size; ++i) {
-//	// Calculate the number of rows for this process
-//	int rows_for_this_process = rows_per_proc + (i < extra_rows ? 1 : 0);
-//
-//	// Calculate the number of elements (rows * columns) for this process
-//	sendcounts[i] = rows_for_this_process * size_v;
-//
-//	// Set the displacement for this process
-//	displs[i] = current_displ;
-//
-//	// Update the displacement for the next process
-//	current_displ += sendcounts[i];
-//}

@@ -13,56 +13,19 @@
 using namespace std;
 
 
-//void task() {
-//    for (int i = 0; i < size_v; i++)
-//    {
-//        for (int j = 0; j < size_v; j++)
-//        {
-//            for (int k = 0; k < size_v; k++)
-//            {
-//                //matrix row value
-//                int matrix_1_row_val = matrix1[i][k];
-//                int matrix_2_col_val = matrix2[k][j];
-//                long long r = matrix_1_row_val * matrix_2_col_val;
-//                result_matrix_result[i][j] = result_matrix_result[i][j] + r;
-//
-//            }
-//
-//        }
-//    }
-//}
 
-
-//void multiply_section(int start_row, int end_row) {
-//    /*unique_lock<std::mutex> lg(lu);
-//    cout << "Now starting multiplication" << endl;
-//    cout << "*****" << this_thread::get_id() << endl;
-//    lg.unlock();*/
-//    for (int i = start_row; i < end_row; i++)
-//    {
-//        for (int j = 0; j < size_v; j++)
-//        {
-//            for (int k = 0; k < size_v; k++)
-//            {
-//                //matrix row value
-//                int matrix_1_row_val = matrix1[i][k];
-//                int matrix_2_col_val = matrix2[k][j];
-//                long long r = matrix_1_row_val * matrix_2_col_val;
-//                result_matrix_result[i][j] = result_matrix_result[i][j] + r;
-//            }}}}
-        //define metrix here
-//mutex 
-
-int size_v = 100;
-int* mat1 = new int[size_v * size_v];
-int* mat2 = new int[size_v * size_v];
+//Initialization of the matrixes
+int size_v = 400;
+long long* mat1 = new long long[size_v * size_v];
+long long* mat2 = new long long[size_v * size_v];
 long long* result = new long long[size_v * size_v];
 int main(int argc, char** argv)
 {
-    Mpi_Lib<int, int, long long> mpi(argc, argv);
+    Mpi_Lib<long long, long long, long long> mpi(argc, argv);
     mpi.init(size_v, size_v);
     int world_rank = mpi.get_world_rank();
     auto sendcounts = mpi.get_sendcounts();
+    cout<<"World Rank is: "<<world_rank << endl;
     //Populating the matrixes
     if (world_rank == 0) {
         int first = 0;
@@ -73,24 +36,18 @@ int main(int argc, char** argv)
 
         }
     }
-    //mpi.barrier();
-
-    /*task();*/
-        //5033335000
-
-    // Mark the start time
     auto start = std::chrono::steady_clock::now();
 
 
     //brodcast matrix2 to all processors
-    mpi.broadcast(mat2, size_v * size_v, 0, MPI_INT);
-
-    int* local_data = new int[sendcounts[world_rank]];
+    mpi.broadcast(mat2, size_v * size_v, 0, MPI_LONG_LONG);
+   
+    long long* local_data = new long long[sendcounts[world_rank]];
     fill_n(local_data, sendcounts[world_rank], 0); // Initialize
     long long* local_result = new long long[sendcounts[world_rank]];
     fill_n(local_result, sendcounts[world_rank], 0LL); // Initialize
     //scatter matrix1 to all processors
-    mpi.scatterV(mat1, local_data, MPI_INT, [local_data, &local_result, world_rank](int start, int end) {
+    mpi.scatterV(mat1, local_data, MPI_LONG_LONG, [local_data, &local_result, world_rank](int start, int end) {
         for (int i = start; i < end; i++)
         {
             // std::cout << "work_load_per_thread: " <<end-start << std::endl;
@@ -105,18 +62,6 @@ int main(int argc, char** argv)
         }
         });
 
-    //cout << "Process " << world_rank << " has received the matrix1bbb data: " << *local_data+5 << endl;
-
-
- //   //ensure every processor has some work to do
- //   if (sendcounts[world_rank] == 0) {
- //       cout<<"Processor "<<world_rank<<" has no work to do"<<endl;
-       // MPI_Finalize();
-       // return 0;
-    //}
-
-   //cout << "Process " << world_rank << " has received the matrix2 data: " << matrix2[0][0] << endl;
- //   multiply the matrices
 
 
     mpi.gather_v(local_result, result,MPI_LONG_LONG,  true);
