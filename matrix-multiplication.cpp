@@ -3,19 +3,16 @@
 
 #include <iostream>
 #include <vector>
-#include <thread>
 #include <chrono>
-#include <mutex>
 #include <mpi.h>
 #include "Thread_Pool.h"
-#include <vector>
 #include "Mpi_Lib.h"
 using namespace std;
 
 
 
 //Initialization of the matrixes
-int size_v = 400;
+int size_v = 1000;
 long long* mat1 = new long long[size_v * size_v];
 long long* mat2 = new long long[size_v * size_v];
 long long* result = new long long[size_v * size_v];
@@ -26,6 +23,10 @@ int main(int argc, char** argv)
     int world_rank = mpi.get_world_rank();
     auto sendcounts = mpi.get_sendcounts();
     cout<<"World Rank is: "<<world_rank << endl;
+    //Ensuring all matrixes are initialized
+    fill_n(mat1, size_v*size_v, 0);
+    fill_n(mat2, size_v * size_v, 0);
+    fill_n(result, size_v * size_v, 0);
     //Populating the matrixes
     if (world_rank == 0) {
         int first = 0;
@@ -36,8 +37,9 @@ int main(int argc, char** argv)
 
         }
     }
-    auto start = std::chrono::steady_clock::now();
 
+    //mark start of mpi operations
+    auto start = std::chrono::steady_clock::now();
 
     //brodcast matrix2 to all processors
     mpi.broadcast(mat2, size_v * size_v, 0, MPI_LONG_LONG);
@@ -65,6 +67,11 @@ int main(int argc, char** argv)
 
 
     mpi.gather_v(local_result, result,MPI_LONG_LONG,  true);
+    //mark end of gathering results
+    auto end = std::chrono::steady_clock::now();
+
+    // Calculate the duration in milliseconds
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     if (world_rank == 0) {
         for (int i = 0; i < size_v; i++) {
             for (int j = 0; j < size_v; j++) {
@@ -73,13 +80,10 @@ int main(int argc, char** argv)
             cout << '\n';
         }
     }
+    if (world_rank == 0) {
+        cout << "Duration after matrix multiplication and gathering results: " << duration << " milliseconds" << endl;
+    }
 
-    // Mark the end time after gathering the results
-    auto end = std::chrono::steady_clock::now();
-
-    // Calculate the duration in milliseconds
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    cout << "Duration is " << duration << endl;
     // Finalize the MPI environment.
     delete[] local_result;
     delete[] mat1;
