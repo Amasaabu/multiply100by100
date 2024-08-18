@@ -1,0 +1,3 @@
+Checking matrix-multiplication.cpp ...
+nofile:0:0: information: Active checkers: 4/802 (use --checkers-report=<filename> to see details) [checkersReport]
+
