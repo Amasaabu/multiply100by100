@@ -1,5 +1,5 @@
 #pragma once
-#include "Mpi_Lib.h"
+#include "Distribution_Lib.h"
 #include "mpi.h"
 #include <vector>
 #include "Thread_Pool.h"
@@ -7,10 +7,10 @@ using namespace std;
 using Funca = std::function<void(int, int)>;
 
 template <class T, class U, class R>
-class Mpi_Lib
+class Distribution_Lib
 {
 public:
-	Mpi_Lib(int&, char**);
+	Distribution_Lib(int&, char**);
 	void init(int&, int elements_per_unit = 1);
 	void broadcast(U*, int, int, MPI_Datatype);
 	int get_world_rank();
@@ -19,7 +19,7 @@ public:
 	void gather_v(R* local_result, R* result, MPI_Datatype, bool use_element_per_unit_scaling = false);
 	int* get_displs();
 	void barrier();
-	~Mpi_Lib();
+	~Distribution_Lib();
 
 private:
 	int world_rank;
@@ -43,7 +43,7 @@ private:
  * @param argv The command line arguments.
  */
 template <class T, class U, class R>
-Mpi_Lib<T, U, R>::Mpi_Lib(int& argc, char** argv)
+Distribution_Lib<T, U, R>::Distribution_Lib(int& argc, char** argv)
 {
 	// Initialize the MPI environment
 	MPI_Init(&argc, &argv);
@@ -61,7 +61,7 @@ Mpi_Lib<T, U, R>::Mpi_Lib(int& argc, char** argv)
  * @param elements_per_unit The number of elements per unit.
  */
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::init(int& size_v, int elements_per_unit) {
+void Distribution_Lib<T, U, R>::init(int& size_v, int elements_per_unit) {
 
 
 	//initialize the sendcounts and displs
@@ -97,7 +97,7 @@ void Mpi_Lib<T, U, R>::init(int& size_v, int elements_per_unit) {
  * @param type_of_data_to_brodcast The MPI datatype of the data.
  */
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::broadcast(U* data_to_brodcast, int count, int root, MPI_Datatype type_of_data_to_brodcast)
+void Distribution_Lib<T, U, R>::broadcast(U* data_to_brodcast, int count, int root, MPI_Datatype type_of_data_to_brodcast)
 {
 	MPI_Bcast(data_to_brodcast, count, type_of_data_to_brodcast, root, MPI_COMM_WORLD);
 }
@@ -108,7 +108,7 @@ void Mpi_Lib<T, U, R>::broadcast(U* data_to_brodcast, int count, int root, MPI_D
  * @return The rank of the current process.
  */
 template <class T, class U, class R>
-int Mpi_Lib<T, U, R>::get_world_rank() {
+int Distribution_Lib<T, U, R>::get_world_rank() {
 	return this->world_rank;
 }
 
@@ -120,7 +120,7 @@ template <class T, class U, class R>
  *
  * @return The vector of sendcounts.
  */
-vector<int> Mpi_Lib<T, U, R>::get_sendcounts() {
+vector<int> Distribution_Lib<T, U, R>::get_sendcounts() {
 	return this->sendcounts;
 }
 
@@ -141,7 +141,7 @@ vector<int> Mpi_Lib<T, U, R>::get_sendcounts() {
  * @param f The function to be executed by the thread pool.
  */
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, MPI_Datatype type_to_scatter, Funca f) {
+void Distribution_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, MPI_Datatype type_to_scatter, Funca f) {
 	// Scatter the data from the root process to all other processes
 	MPI_Scatterv(data_to_scatter, this->sendcounts.data(), displs.data(), type_to_scatter, local_data, sendcounts[world_rank], type_to_scatter, 0, MPI_COMM_WORLD);
 
@@ -176,7 +176,7 @@ void Mpi_Lib<T, U, R>::scatterV(T* data_to_scatter, T* local_data, MPI_Datatype 
  * @param use_element_per_unit_scaling Flag indicating whether to scale the sendcounts based on the number of elements per unit.
  */
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, MPI_Datatype type_of_result, bool use_element_per_unit_scaling) {
+void Distribution_Lib<T, U, R>::gather_v(R* local_result, R* result, MPI_Datatype type_of_result, bool use_element_per_unit_scaling) {
 	//gather the results from all processors
 	vector<int> sendcounts_gather(this->world_size, 0);
 	vector<int> displs_gather(this->world_size, 0);
@@ -208,7 +208,7 @@ void Mpi_Lib<T, U, R>::gather_v(R* local_result, R* result, MPI_Datatype type_of
  * @return A pointer to the displacements array.
  */
 template <class T, class U, class R>
-int* Mpi_Lib<T, U, R>::get_displs() {
+int* Distribution_Lib<T, U, R>::get_displs() {
 	return displs.data();
 }
 
@@ -216,7 +216,7 @@ int* Mpi_Lib<T, U, R>::get_displs() {
  * @brief Blocks until all processes in the MPI_COMM_WORLD communicator have reached this point.
  */
 template <class T, class U, class R>
-void Mpi_Lib<T, U, R>::barrier() {
+void Distribution_Lib<T, U, R>::barrier() {
 	MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -226,9 +226,8 @@ void Mpi_Lib<T, U, R>::barrier() {
  * This method finalizes the MPI environment and cleans up any resources used by the Mpi_Lib object.
  */
 template <class T, class U, class R>
-Mpi_Lib<T, U, R>::~Mpi_Lib()
+Distribution_Lib<T, U, R>::~Distribution_Lib()
 {
 	// Finalize the MPI environment
 	MPI_Finalize();
-	//delete local_data
 }

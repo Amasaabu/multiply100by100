@@ -27,7 +27,7 @@
     <ClCompile Include="Queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Mpi_Lib.cpp">
+    <ClCompile Include="Distribution_Lib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Mpi_Type_Mapping.cpp">
@@ -44,7 +44,7 @@
     <ClInclude Include="Queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mpi_Lib.h">
+    <ClInclude Include="Distribution_Lib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Mpi_Type_Mapping.h">

@@ -6,7 +6,7 @@
 #include <chrono>
 #include <mpi.h>
 #include "Thread_Pool.h"
-#include "Mpi_Lib.h"
+#include "Distribution_Lib.h"
 using namespace std;
 
 
@@ -18,7 +18,7 @@ long long* mat2 = new long long[size_v * size_v];
 long long* result = new long long[size_v * size_v];
 int main(int argc, char** argv)
 {
-    Mpi_Lib<long long, long long, long long> mpi(argc, argv);
+    Distribution_Lib<long long, long long, long long> mpi(argc, argv);
     mpi.init(size_v, size_v);
     int world_rank = mpi.get_world_rank();
     auto sendcounts = mpi.get_sendcounts();
